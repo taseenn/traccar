@@ -198,51 +198,48 @@ public class TeltonikaProtocolDecoder extends BaseProtocolDecoder {
                 "FMB206", "FMT100", "MTB100", "FMP100", "MSP500", "FMC125", "FMM125", "FMU130", "FMC130", "FMM130",
                 "FMB150", "FMC150", "FMM150", "FMC920");
 
-        register(1, null, (p, b) -> p.set(Position.PREFIX_IN + 1, b.readUnsignedByte() > 0));
-        register(2, null, (p, b) -> p.set(Position.PREFIX_IN + 2, b.readUnsignedByte() > 0));
-        register(3, null, (p, b) -> p.set(Position.PREFIX_IN + 3, b.readUnsignedByte() > 0));
-        register(4, null, (p, b) -> p.set(Position.PREFIX_IN + 4, b.readUnsignedByte() > 0));
-        register(9, fmbXXX, (p, b) -> p.set(Position.PREFIX_ADC + 1, b.readUnsignedShort() * 0.001));
-        register(10, fmbXXX, (p, b) -> p.set(Position.PREFIX_ADC + 2, b.readUnsignedShort() * 0.001));
-        register(11, fmbXXX, (p, b) -> p.set(Position.KEY_ICCID, String.valueOf(b.readLong())));
-        register(12, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_USED, b.readUnsignedInt() * 0.001));
-        register(13, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_CONSUMPTION, b.readUnsignedShort() * 0.01));
+
+        register(1, fmbXXX, (p, b) -> p.set(Position.KEY_INPUT1, b.readUnsignedByte()));
+        register(2, fmbXXX, (p, b) -> p.set(Position.KEY_INPUT2, b.readUnsignedByte()));
+        register(3, fmbXXX, (p, b) -> p.set(Position.KEY_INPUT3, b.readUnsignedByte()));
+        register(9, fmbXXX, (p, b) -> p.set(Position.KEY_ANALOG1, b.readUnsignedShort() * 0.001));
+        register(10, fmbXXX, (p, b) -> p.set(Position.KEY_SD_STATUS, b.readUnsignedByte()));
+        register(11, fmbXXX, (p, b) -> p.set(Position.KEY_ICCID1, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(12, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_USED_GPS, b.readUnsignedInt() * 0.001));
+        register(13, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_RATE_GPS, b.readUnsignedShort()));
+        register(4, fmbXXX, (p, b) -> p.set(Position.KEY_PULSE_COUNT1, b.readUnsignedInt()));
         register(16, null, (p, b) -> p.set(Position.KEY_ODOMETER, b.readUnsignedInt()));
         register(17, null, (p, b) -> p.set("axisX", b.readShort()));
         register(18, null, (p, b) -> p.set("axisY", b.readShort()));
         register(19, null, (p, b) -> p.set("axisZ", b.readShort()));
-        register(21, null, (p, b) -> p.set(Position.KEY_RSSI, b.readUnsignedByte()));
+        register(21, fmbXXX, (p, b) -> p.set(Position.KEY_GSM_SIGNAL, b.readUnsignedByte()));
         register(24, fmbXXX, (p, b) -> p.setSpeed(UnitsConverter.knotsFromKph(b.readUnsignedShort())));
         register(25, null, (p, b) -> p.set("bleTemp1", b.readShort() * 0.01));
         register(26, null, (p, b) -> p.set("bleTemp2", b.readShort() * 0.01));
         register(27, null, (p, b) -> p.set("bleTemp3", b.readShort() * 0.01));
         register(28, null, (p, b) -> p.set("bleTemp4", b.readShort() * 0.01));
-        register(30, fmbXXX, (p, b) -> p.set("faultCount", b.readUnsignedByte()));
+        register(30, fmbXXX, (p, b) -> p.set(Position.KEY_NUM_DTC, b.readCharSequence(1, StandardCharsets.US_ASCII).toString()));
         register(31, fmbXXX, (p, b) -> p.set(Position.KEY_ENGINE_LOAD, b.readUnsignedByte()));
         register(32, fmbXXX, (p, b) -> p.set(Position.KEY_COOLANT_TEMP, b.readByte()));
+        register(33, fmbXXX, (p, b) -> p.set(Position.KEY_SHORT_FUEL_TRIM, b.readByte()));
         register(36, fmbXXX, (p, b) -> p.set(Position.KEY_RPM, b.readUnsignedShort()));
         register(43, fmbXXX, (p, b) -> p.set("milDistance", b.readUnsignedShort()));
         register(57, fmbXXX, (p, b) -> p.set("hybridBatteryLevel", b.readByte()));
-        register(66, null, (p, b) -> p.set(Position.KEY_POWER, b.readUnsignedShort() * 0.001));
+        register(66, null, (p, b) -> p.set(Position.KEY_EXTERNAL_VOLTAGE, b.readUnsignedShort() * 0.001));
         register(67, null, (p, b) -> p.set(Position.KEY_BATTERY, b.readUnsignedShort() * 0.001));
-        register(68, fmbXXX, (p, b) -> p.set("batteryCurrent", b.readUnsignedShort() * 0.001));
-        register(72, fmbXXX, (p, b) -> p.set(Position.PREFIX_TEMP + 1, b.readInt() * 0.1));
-        register(73, fmbXXX, (p, b) -> p.set(Position.PREFIX_TEMP + 2, b.readInt() * 0.1));
-        register(74, fmbXXX, (p, b) -> p.set(Position.PREFIX_TEMP + 3, b.readInt() * 0.1));
-        register(75, fmbXXX, (p, b) -> p.set(Position.PREFIX_TEMP + 4, b.readInt() * 0.1));
-        register(78, null, (p, b) -> {
-            long driverUniqueId = b.readLongLE();
-            if (driverUniqueId != 0) {
-                p.set(Position.KEY_DRIVER_UNIQUE_ID, String.format("%016X", driverUniqueId));
-            }
-        });
-        register(80, fmbXXX, (p, b) -> p.set("dataMode", b.readUnsignedByte()));
+        register(68, fmbXXX, (p, b) -> p.set(Position.KEY_BATTERY_CURRENT, b.readUnsignedShort() * 0.001));
+        register(72, fmbXXX, (p, b) -> p.set(Position.KEY_DALLAS_TEMP1, b.readInt() * 0.1));
+        register(73, fmbXXX, (p, b) -> p.set(Position.KEY_DALLAS_TEMP2, b.readInt() * 0.1));
+        register(74, fmbXXX, (p, b) -> p.set(Position.KEY_DALLAS_TEMP3, b.readInt() * 0.1));
+        register(75, fmbXXX, (p, b) -> p.set(Position.KEY_DALLAS_TEMP4, b.readInt() * 0.1));
+        register(78, fmbXXX, (p, b) -> p.set(Position.KEY_IBUTTON, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(80, fmbXXX, (p, b) -> p.set(Position.KEY_DATA_MODE, b.readUnsignedByte()));
         register(81, fmbXXX, (p, b) -> p.set(Position.KEY_OBD_SPEED, b.readUnsignedByte()));
-        register(82, fmbXXX, (p, b) -> p.set(Position.KEY_THROTTLE, b.readUnsignedByte()));
+        register(82, fmbXXX, (p, b) -> p.set(Position.KEY_ACCELERATOR, b.readUnsignedByte()));
         register(83, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_USED, b.readUnsignedInt() * 0.1));
         register(84, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL, b.readUnsignedShort() * 0.1));
         register(85, fmbXXX, (p, b) -> p.set(Position.KEY_RPM, b.readUnsignedShort()));
-        register(87, fmbXXX, (p, b) -> p.set(Position.KEY_OBD_ODOMETER, b.readUnsignedInt()));
+        register(87, fmbXXX, (p, b) -> p.set(Position.KEY_TOTAL_MILEAGE, b.readUnsignedInt()));
         register(89, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_LEVEL, b.readUnsignedByte()));
         register(107, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_USED, b.readUnsignedInt() * 0.1));
         register(110, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_CONSUMPTION, b.readUnsignedShort() * 0.1));
@@ -252,14 +249,14 @@ public class TeltonikaProtocolDecoder extends BaseProtocolDecoder {
         register(702, Set.of("FMC640", "FMC650", "FMM640"), (p, b) -> p.set("bleTemp2", b.readShort() * 0.01));
         register(703, Set.of("FMC640", "FMC650", "FMM640"), (p, b) -> p.set("bleTemp3", b.readShort() * 0.01));
         register(704, Set.of("FMC640", "FMC650", "FMM640"), (p, b) -> p.set("bleTemp4", b.readShort() * 0.01));
-        register(179, null, (p, b) -> p.set(Position.PREFIX_OUT + 1, b.readUnsignedByte() > 0));
-        register(180, null, (p, b) -> p.set(Position.PREFIX_OUT + 2, b.readUnsignedByte() > 0));
+        register(179, fmbXXX, (p, b) -> p.set(Position.KEY_OUTPUT1, b.readUnsignedByte()));
+        register(180, fmbXXX, (p, b) -> p.set(Position.KEY_OUTPUT2, b.readUnsignedByte()));
         register(181, null, (p, b) -> p.set(Position.KEY_PDOP, b.readUnsignedShort() * 0.1));
         register(182, null, (p, b) -> p.set(Position.KEY_HDOP, b.readUnsignedShort() * 0.1));
         register(199, null, (p, b) -> p.set(Position.KEY_ODOMETER_TRIP, b.readUnsignedInt()));
-        register(200, fmbXXX, (p, b) -> p.set("sleepMode", b.readUnsignedByte()));
-        register(205, fmbXXX, (p, b) -> p.set("cid2g", b.readUnsignedShort()));
-        register(206, fmbXXX, (p, b) -> p.set("lac", b.readUnsignedShort()));
+        register(200, fmbXXX, (p, b) -> p.set(Position.KEY_SLEEP_MODE, b.readUnsignedByte()));
+        register(205, fmbXXX, (p, b) -> p.set(Position.KEY_GSM_CELL_ID, b.readUnsignedShort()));
+        register(206, fmbXXX, (p, b) -> p.set(Position.KEY_GSM_AREA_CODE, b.readUnsignedShort()));
         register(232, fmbXXX, (p, b) -> p.set("cngStatus", b.readUnsignedByte() > 0));
         register(233, fmbXXX, (p, b) -> p.set("cngUsed", b.readUnsignedInt() * 0.1));
         register(234, fmbXXX, (p, b) -> p.set("cngLevel", b.readUnsignedShort()));
@@ -274,7 +271,7 @@ public class TeltonikaProtocolDecoder extends BaseProtocolDecoder {
             p.addAlarm(b.readUnsignedByte() > 0 ? Position.ALARM_TOW : null);
         });
         register(247, fmbXXX, (p, b) -> {
-            p.addAlarm(b.readUnsignedByte() > 0 ? Position.ALARM_ACCIDENT : null);
+            p.addAlarm(b.readUnsignedByte() > 0 ? Position.KEY_CRASH_DETECTION : null);
         });
         register(249, fmbXXX, (p, b) -> {
             p.addAlarm(b.readUnsignedByte() > 0 ? Position.ALARM_JAMMING : null);
@@ -285,18 +282,10 @@ public class TeltonikaProtocolDecoder extends BaseProtocolDecoder {
         register(252, fmbXXX, (p, b) -> {
             p.addAlarm(b.readUnsignedByte() > 0 ? Position.ALARM_POWER_CUT : null);
         });
-        register(253, null, (p, b) -> {
-            switch (b.readUnsignedByte()) {
-                case 1 -> p.addAlarm(Position.ALARM_ACCELERATION);
-                case 2 -> p.addAlarm(Position.ALARM_BRAKING);
-                case 3 -> p.addAlarm(Position.ALARM_CORNERING);
-            }
-        });
-        register(175, fmbXXX, (p, b) -> {
-            p.addAlarm(b.readUnsignedByte() > 0 ? Position.ALARM_GEOFENCE_ENTER : Position.ALARM_GEOFENCE_EXIT);
-        });
-        register(636, fmbXXX, (p, b) -> p.set("cid4g", b.readUnsignedInt()));
-        register(662, fmbXXX, (p, b) -> p.set(Position.KEY_DOOR, b.readUnsignedByte() > 0));
+        register(253, fmbXXX, (p, b) -> p.set(Position.KEY_GREEN_TYPE, b.readUnsignedByte()));
+        register(175, fmbXXX, (p, b) -> p.set(Position.KEY_AUTO_GEOFENCE, b.readUnsignedByte()));
+        register(636, fmbXXX, (p, b) -> p.set(Position.KEY_CELL_ID, b.readUnsignedInt()));
+        register(662, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_CAR_IS_CLOSED, b.readUnsignedByte() == 1));
         register(10644, fmbXXX, (p, b) -> p.set("tempProbe1", b.readShort() / 100.0));
         register(10645, fmbXXX, (p, b) -> p.set("tempProbe2", b.readShort() / 100.0));
         register(10646, fmbXXX, (p, b) -> p.set("tempProbe3", b.readShort() / 100.0));
@@ -311,6 +300,619 @@ public class TeltonikaProtocolDecoder extends BaseProtocolDecoder {
         register(10833, fmbXXX, (p, b) -> p.set("eyeRoll2", b.readShort()));
         register(10834, fmbXXX, (p, b) -> p.set("eyeRoll3", b.readShort()));
         register(10835, fmbXXX, (p, b) -> p.set("eyeRoll4", b.readShort()));
+        // FMB140
+        // Permanent I/O Element
+        register(69, null, (p, b) -> p.set(Position.KEY_GNSS_STATUS, b.readUnsignedByte()));
+        register(6, null, (p, b) -> p.set(Position.KEY_ANALOG_INPUT2, b.readUnsignedShort() * 0.001));
+        register(76, null, (p, b) -> p.set(Position.KEY_DALLAS_TEMP_ID1, b.readLong()));
+        register(77, null, (p, b) -> p.set(Position.KEY_DALLAS_TEMP_ID2, b.readLong()));
+        register(79, null, (p, b) -> p.set(Position.KEY_DALLAS_TEMP_ID3, b.readLong()));
+        register(71, null, (p, b) -> p.set(Position.KEY_DALLAS_TEMP_ID4, b.readLong()));
+        register(207, null, (p, b) -> p.set(Position.KEY_RFID, b.readLong()));
+        register(201, null, (p, b) -> p.set(Position.KEY_LLS1_FUEL, b.readShort()));
+        register(202, null, (p, b) -> p.set(Position.KEY_LLS1_TEMP, b.readByte()));
+        register(203, null, (p, b) -> p.set(Position.KEY_LLS2_FUEL, b.readShort()));
+        register(204, null, (p, b) -> p.set(Position.KEY_LLS2_TEMP, b.readByte()));
+        register(210, null, (p, b) -> p.set(Position.KEY_LLS3_FUEL, b.readShort()));
+        register(211, null, (p, b) -> p.set(Position.KEY_LLS3_TEMP, b.readByte()));
+        register(212, null, (p, b) -> p.set(Position.KEY_LLS4_FUEL, b.readShort()));
+        register(213, null, (p, b) -> p.set(Position.KEY_LLS4_TEMP, b.readByte()));
+        register(214, null, (p, b) -> p.set(Position.KEY_LLS5_FUEL, b.readShort()));
+        register(215, null, (p, b) -> p.set(Position.KEY_LLS5_TEMP, b.readByte()));
+        register(15, null, (p, b) -> p.set(Position.KEY_ECO_SCORE, b.readUnsignedShort() * 0.01));
+        register(238, null, (p, b) -> p.set(Position.KEY_USER_ID, b.readLong()));
+        register(237, null, (p, b) -> p.set(Position.KEY_NETWORK_TYPE, b.readUnsignedByte()));
+        register(5, null, (p, b) -> p.set(Position.KEY_PULSE_COUNT2, b.readUnsignedInt()));
+        register(263, null, (p, b) -> p.set(Position.KEY_BT_STATUS, b.readUnsignedByte()));
+        register(264, null, (p, b) -> p.set(Position.KEY_BARCODE_ID, b.readString(b.readUnsignedByte(), StandardCharsets.US_ASCII)));
+        register(303, null, (p, b) -> p.set(Position.KEY_INSTANT_MOVEMENT, b.readUnsignedByte() > 0));
+        register(327, null, (p, b) -> p.set(Position.KEY_UL202_FUEL, b.readShort() * 0.1));
+        register(483, null, (p, b) -> p.set(Position.KEY_UL202_STATUS, b.readUnsignedByte()));
+        register(380, null, (p, b) -> p.set(Position.KEY_OUTPUT3, b.readUnsignedByte() > 0));
+        register(381, null, (p, b) -> p.set(Position.KEY_GROUND_SENSE, b.readUnsignedByte() > 0));
+        register(387, null, (p, b) -> p.set(Position.KEY_ISO6709, b.readString(34, StandardCharsets.US_ASCII)));
+        register(403, null, (p, b) -> p.set(Position.KEY_DRIVER_NAME, b.readString(35, StandardCharsets.US_ASCII)));
+        register(404, null, (p, b) -> p.set(Position.KEY_DRIVER_LICENSE_TYPE, b.readUnsignedByte()));
+        register(405, null, (p, b) -> p.set(Position.KEY_DRIVER_GENDER, b.readUnsignedByte()));
+        register(406, null, (p, b) -> p.set(Position.KEY_DRIVER_CARD_ID, b.readUnsignedInt()));
+        register(407, null, (p, b) -> p.set(Position.KEY_DRIVER_CARD_EXPIRY, b.readUnsignedShort()));
+        register(408, null, (p, b) -> p.set(Position.KEY_DRIVER_ISSUE_PLACE, b.readUnsignedShort()));
+        register(409, null, (p, b) -> p.set(Position.KEY_DRIVER_STATUS_EVENT, b.readUnsignedByte()));
+        register(329, null, (p, b) -> p.set(Position.KEY_AIN_SPEED, b.readUnsignedShort()));
+        register(500, null, (p, b) -> p.set(Position.KEY_VENDOR_NAME, b.readString(40, StandardCharsets.US_ASCII)));
+        register(501, null, (p, b) -> p.set(Position.KEY_VEHICLE_NUMBER, b.readString(40, StandardCharsets.US_ASCII)));
+        register(502, null, (p, b) -> p.set(Position.KEY_SPEED_SENSOR_STATUS, b.readUnsignedByte() > 0));
+        register(637, null, (p, b) -> p.set(Position.KEY_WAKE_REASON, b.readUnsignedByte() > 0));
+        register(10804, null, (p, b) -> p.set(Position.KEY_EYE_HUM1, b.readUnsignedByte()));
+        register(10805, null, (p, b) -> p.set(Position.KEY_EYE_HUM2, b.readUnsignedByte()));
+        register(10806, null, (p, b) -> p.set(Position.KEY_EYE_HUM3, b.readUnsignedByte()));
+        register(10807, null, (p, b) -> p.set(Position.KEY_EYE_HUM4, b.readUnsignedByte()));
+        register(10808, null, (p, b) -> p.set(Position.KEY_EYE_MAG1, b.readUnsignedByte() > 0));
+        register(10809, null, (p, b) -> p.set(Position.KEY_EYE_MAG2, b.readUnsignedByte() > 0));
+        register(10810, null, (p, b) -> p.set(Position.KEY_EYE_MAG3, b.readUnsignedByte() > 0));
+        register(10811, null, (p, b) -> p.set(Position.KEY_EYE_MAG4, b.readUnsignedByte() > 0));
+        register(10812, null, (p, b) -> p.set(Position.KEY_EYE_MOVE1, b.readUnsignedByte() > 0));
+        register(10813, null, (p, b) -> p.set(Position.KEY_EYE_MOVE2, b.readUnsignedByte() > 0));
+        register(10814, null, (p, b) -> p.set(Position.KEY_EYE_MOVE3, b.readUnsignedByte() > 0));
+        register(10815, null, (p, b) -> p.set(Position.KEY_EYE_MOVE4, b.readUnsignedByte() > 0));
+        register(10816, null, (p, b) -> p.set(Position.KEY_EYE_PITCH1, b.readByte()));
+        register(10817, null, (p, b) -> p.set(Position.KEY_EYE_PITCH2, b.readByte()));
+        register(10818, null, (p, b) -> p.set(Position.KEY_EYE_PITCH3, b.readByte()));
+        register(10819, null, (p, b) -> p.set(Position.KEY_EYE_PITCH4, b.readByte()));
+        register(10820, null, (p, b) -> p.set(Position.KEY_EYE_LOW_BAT1, b.readUnsignedByte() > 0));
+        register(10821, null, (p, b) -> p.set(Position.KEY_EYE_LOW_BAT2, b.readUnsignedByte() > 0));
+        register(10822, null, (p, b) -> p.set(Position.KEY_EYE_LOW_BAT3, b.readUnsignedByte() > 0));
+        register(10823, null, (p, b) -> p.set(Position.KEY_EYE_LOW_BAT4, b.readUnsignedByte() > 0));
+        register(10824, null, (p, b) -> p.set(Position.KEY_EYE_BAT_VOLT1, b.readUnsignedShort() * 0.001));
+        register(10825, null, (p, b) -> p.set(Position.KEY_EYE_BAT_VOLT2, b.readUnsignedShort() * 0.001));
+        register(10826, null, (p, b) -> p.set(Position.KEY_EYE_BAT_VOLT3, b.readUnsignedShort() * 0.001));
+        register(10827, null, (p, b) -> p.set(Position.KEY_EYE_BAT_VOLT4, b.readUnsignedShort() * 0.001));
+        register(10836, null, (p, b) -> p.set(Position.KEY_EYE_MOVE_COUNT1, b.readUnsignedShort()));
+        register(10837, null, (p, b) -> p.set(Position.KEY_EYE_MOVE_COUNT2, b.readUnsignedShort()));
+        register(10838, null, (p, b) -> p.set(Position.KEY_EYE_MOVE_COUNT3, b.readUnsignedShort()));
+        register(10839, null, (p, b) -> p.set(Position.KEY_EYE_MOVE_COUNT4, b.readUnsignedShort()));
+        register(10840, null, (p, b) -> p.set(Position.KEY_EYE_MAG_COUNT1, b.readUnsignedShort()));
+        register(10841, null, (p, b) -> p.set(Position.KEY_EYE_MAG_COUNT2, b.readUnsignedShort()));
+        register(10842, null, (p, b) -> p.set(Position.KEY_EYE_MAG_COUNT3, b.readUnsignedShort()));
+        register(10843, null, (p, b) -> p.set(Position.KEY_EYE_MAG_COUNT4, b.readUnsignedShort()));
+        register(383, null, (p, b) -> p.set(Position.KEY_AXL_CALIB_STATUS, b.readUnsignedByte()));
+        register(451, null, (p, b) -> p.set(Position.KEY_BLE_RFID1, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(452, null, (p, b) -> p.set(Position.KEY_BLE_RFID2, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(453, null, (p, b) -> p.set(Position.KEY_BLE_RFID3, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(454, null, (p, b) -> p.set(Position.KEY_BLE_RFID4, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(455, null, (p, b) -> p.set(Position.KEY_BLE_BTN1_STATE1, b.readUnsignedByte() > 0));
+        register(456, null, (p, b) -> p.set(Position.KEY_BLE_BTN1_STATE2, b.readUnsignedByte() > 0));
+        register(457, null, (p, b) -> p.set(Position.KEY_BLE_BTN1_STATE3, b.readUnsignedByte() > 0));
+        register(458, null, (p, b) -> p.set(Position.KEY_BLE_BTN1_STATE4, b.readUnsignedByte() > 0));
+        register(459, null, (p, b) -> p.set(Position.KEY_BLE_BTN2_STATE1, b.readUnsignedByte() > 0));
+        register(460, null, (p, b) -> p.set(Position.KEY_BLE_BTN2_STATE2, b.readUnsignedByte() > 0));
+        register(461, null, (p, b) -> p.set(Position.KEY_BLE_BTN2_STATE3, b.readUnsignedByte() > 0));
+        register(462, null, (p, b) -> p.set(Position.KEY_BLE_BTN2_STATE4, b.readUnsignedByte() > 0));
+        register(622, null, (p, b) -> p.set(Position.KEY_FREQ_DIN1, b.readUnsignedShort() * 0.1));
+        register(623, null, (p, b) -> p.set(Position.KEY_FREQ_DIN2, b.readUnsignedShort() * 0.1));
+        register(1148, null, (p, b) -> p.set(Position.KEY_CONNECTIVITY_QUALITY, b.readUnsignedInt()));
+        register(155, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_01, b.readUnsignedByte()));
+        register(156, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_02, b.readUnsignedByte()));
+        register(157, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_03, b.readUnsignedByte()));
+        register(158, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_04, b.readUnsignedByte()));
+        register(159, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_05, b.readUnsignedByte()));
+        register(61,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_06, b.readUnsignedByte()));
+        register(62,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_07, b.readUnsignedByte()));
+        register(63,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_08, b.readUnsignedByte()));
+        register(64,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_09, b.readUnsignedByte()));
+        register(65,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_10, b.readUnsignedByte()));
+        register(70,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_11, b.readUnsignedByte()));
+        register(88,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_12, b.readUnsignedByte()));
+        register(91,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_13, b.readUnsignedByte()));
+        register(92,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_14, b.readUnsignedByte()));
+        register(93,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_15, b.readUnsignedByte()));
+        register(94,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_16, b.readUnsignedByte()));
+        register(95,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_17, b.readUnsignedByte()));
+        register(96,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_18, b.readUnsignedByte()));
+        register(97,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_19, b.readUnsignedByte()));
+        register(98,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_20, b.readUnsignedByte()));
+        register(99,  null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_21, b.readUnsignedByte()));
+        register(153, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_22, b.readUnsignedByte()));
+        register(154, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_23, b.readUnsignedByte()));
+        register(190, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_24, b.readUnsignedByte()));
+        register(191, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_25, b.readUnsignedByte()));
+        register(192, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_26, b.readUnsignedByte()));
+        register(193, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_27, b.readUnsignedByte()));
+        register(194, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_28, b.readUnsignedByte()));
+        register(195, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_29, b.readUnsignedByte()));
+        register(196, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_30, b.readUnsignedByte()));
+        register(197, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_31, b.readUnsignedByte()));
+        register(198, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_32, b.readUnsignedByte()));
+        register(208, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_33, b.readUnsignedByte()));
+        register(209, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_34, b.readUnsignedByte()));
+        register(216, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_35, b.readUnsignedByte()));
+        register(217, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_36, b.readUnsignedByte()));
+        register(218, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_37, b.readUnsignedByte()));
+        register(219, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_38, b.readUnsignedByte()));
+        register(220, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_39, b.readUnsignedByte()));
+        register(221, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_40, b.readUnsignedByte()));
+        register(222, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_41, b.readUnsignedByte()));
+        register(223, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_42, b.readUnsignedByte()));
+        register(224, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_43, b.readUnsignedByte()));
+        register(225, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_44, b.readUnsignedByte()));
+        register(226, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_45, b.readUnsignedByte()));
+        register(227, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_46, b.readUnsignedByte()));
+        register(228, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_47, b.readUnsignedByte()));
+        register(229, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_48, b.readUnsignedByte()));
+        register(230, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_49, b.readUnsignedByte()));
+        register(231, null, (p, b) -> p.set(Position.KEY_GEOFENCE_ZONE_50, b.readUnsignedByte()));
+        register(250, null, (p, b) -> p.set(Position.KEY_TRIP, b.readUnsignedByte()));
+        register(255, null, (p, b) -> p.set(Position.KEY_OVERSPEED, b.readUnsignedByte()));
+        register(257, null, (p, b) -> {
+            int length = b.readUnsignedByte();
+            p.set(Position.KEY_CRASH_TRACE, ByteBufUtil.hexDump(b.readSlice(length)));
+        });
+        register(285, null, (p, b) -> p.set(Position.KEY_ALCOHOL, b.readUnsignedShort() / 1000.0));
+        register(248, null, (p, b) -> p.set(Position.KEY_IMMOBILIZER, b.readUnsignedByte()));
+        register(254, null, (p, b) -> p.set(Position.KEY_GREEN_VALUE, b.readUnsignedByte()));
+        register(14, null, (p, b) -> p.set(Position.KEY_ICCID2, b.readLong()));
+        register(243, null, (p, b) -> p.set(Position.KEY_GREEN_DURATION, b.readUnsignedShort()));
+        register(258, null, (p, b) -> p.set(Position.KEY_ECO_MAX, b.readLong()));
+        register(259, null, (p, b) -> p.set(Position.KEY_ECO_AVG, b.readLong()));
+        register(260, null, (p, b) -> p.set(Position.KEY_ECO_DURATION, b.readUnsignedShort()));
+        register(283, null, (p, b) -> p.set(Position.KEY_DRIVING_STATE, b.readUnsignedByte()));
+        register(284, null, (p, b) -> p.set(Position.KEY_DRIVING_RECORDS, b.readUnsignedShort()));
+        register(317, null, (p, b) -> p.set(Position.KEY_CRASH_COUNT, b.readUnsignedByte()));
+        register(318, null, (p, b) -> p.set(Position.KEY_GNSS_JAMMING, b.readUnsignedByte()));
+        register(391, null, (p, b) -> p.set(Position.KEY_PRIVATE_MODE, b.readUnsignedByte()));
+        register(449, null, (p, b) -> p.set(Position.KEY_IGNITION_ON_TIME, b.readUnsignedInt()));
+        register(1412, null, (p, b) -> p.set(Position.KEY_MOTO_FALL, b.readUnsignedByte()));
+        register(256, null, (p, b) -> p.set(Position.KEY_VIN, b.readCharSequence(17, StandardCharsets.US_ASCII).toString()));
+        // OBD Parameters
+        register(34, null, (p, b) -> p.set(Position.KEY_FUEL_PRESSURE, b.readUnsignedShort()));
+        register(35, null, (p, b) -> p.set(Position.KEY_MAP, b.readUnsignedByte()));
+        register(37, null, (p, b) -> p.set(Position.KEY_OBD_SPEED, b.readUnsignedByte()));
+        register(38, null, (p, b) -> p.set(Position.KEY_TIMING_ADVANCE, b.readByte()));
+        register(39, null, (p, b) -> p.set(Position.KEY_INTAKE_TEMP, b.readByte()));
+        register(40, null, (p, b) -> p.set(Position.KEY_MAF, b.readUnsignedShort() * 0.01));
+        register(41, null, (p, b) -> p.set(Position.KEY_THROTTLE, b.readUnsignedByte()));
+        register(42, null, (p, b) -> p.set(Position.KEY_RUNTIME, b.readUnsignedShort()));
+        register(44, null, (p, b) -> p.set(Position.KEY_REL_FUEL_PRESSURE, b.readUnsignedShort() * 0.1));
+        register(45, null, (p, b) -> p.set(Position.KEY_DIR_FUEL_PRESSURE, b.readUnsignedShort() * 10));
+        register(46, null, (p, b) -> p.set(Position.KEY_CMD_EGR, b.readUnsignedByte()));
+        register(47, null, (p, b) -> p.set(Position.KEY_EGR_ERROR, b.readByte()));
+        register(48, null, (p, b) -> p.set(Position.KEY_FUEL_LEVEL, b.readUnsignedByte()));
+        register(49, null, (p, b) -> p.set(Position.KEY_DIST_CLEAR, b.readUnsignedShort()));
+        register(50, null, (p, b) -> p.set(Position.KEY_BARO_PRESSURE, b.readUnsignedByte()));
+        register(51, null, (p, b) -> p.set(Position.KEY_MODULE_VOLTAGE, b.readUnsignedShort() * 0.001));
+        // OBD elements
+        register(52, fmbXXX, (p, b) -> p.set(Position.KEY_ABS_LOAD, b.readUnsignedShort() * 0.01));
+        register(759, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_TYPE, b.readUnsignedByte()));
+        register(53, fmbXXX, (p, b) -> p.set(Position.KEY_AMBIENT_AIR_TEMP, b.readByte()));
+        register(54, fmbXXX, (p, b) -> p.set(Position.KEY_MIL_RUNTIME, b.readUnsignedShort()));
+        register(55, fmbXXX, (p, b) -> p.set(Position.KEY_TIME_SINCE_CLEAR, b.readUnsignedShort()));
+        register(56, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_RAIL_PRESS, b.readUnsignedShort() * 10));
+        register(58, fmbXXX, (p, b) -> p.set(Position.KEY_ENGINE_OIL_TEMP, b.readUnsignedByte()));
+        register(59, fmbXXX, (p, b) -> p.set(Position.KEY_INJECTION_TIMING, b.readShort() * 0.01));
+        register(540, fmbXXX, (p, b) -> p.set(Position.KEY_THROTTLE_POS_GROUP, b.readUnsignedByte()));
+        register(541, fmbXXX, (p, b) -> p.set(Position.KEY_EQUIV_RATIO, b.readUnsignedByte() * 0.01));
+        register(542, fmbXXX, (p, b) -> p.set(Position.KEY_MAP2, b.readUnsignedShort()));
+        register(543, fmbXXX, (p, b) -> p.set(Position.KEY_HYBRID_VOLTAGE, b.readUnsignedShort()));
+        register(544, fmbXXX, (p, b) -> p.set(Position.KEY_HYBRID_CURRENT, b.readShort()));
+        register(60, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_RATE, b.readUnsignedShort() * 0.01));
+
+        // OBD OEM elements
+        register(389, fmbXXX, (p, b) -> p.set(Position.KEY_OEM_TOTAL_MILEAGE, b.readUnsignedInt()));
+        register(390, fmbXXX, (p, b) -> p.set(Position.KEY_OEM_FUEL_LEVEL, b.readUnsignedInt() * 0.1));
+        register(402, fmbXXX, (p, b) -> p.set(Position.KEY_OEM_DISTANCE_SERVICE, b.readUnsignedInt()));
+        register(411, fmbXXX, (p, b) -> p.set(Position.KEY_OEM_BATTERY_CHARGE, b.readUnsignedByte()));
+        register(755, fmbXXX, (p, b) -> p.set(Position.KEY_OEM_REMAINING_DIST, b.readUnsignedShort()));
+        register(1151, fmbXXX, (p, b) -> p.set(Position.KEY_OEM_BATTERY_HEALTH, b.readUnsignedShort()));
+        register(1152, fmbXXX, (p, b) -> p.set(Position.KEY_OEM_BATTERY_TEMP, b.readShort()));
+
+        // BLE Sensors
+        register(29, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_BATTERY1, b.readUnsignedByte()));
+        register(20, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_BATTERY2, b.readUnsignedByte()));
+        register(22, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_BATTERY3, b.readUnsignedByte()));
+        // BLE Battery
+        register(23, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_BATTERY4, b.readUnsignedByte()));
+
+        // BLE Humidity
+        register(86, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_HUMIDITY1, b.readUnsignedShort() * 0.1));
+        register(104, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_HUMIDITY2, b.readUnsignedShort() * 0.1));
+        register(106, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_HUMIDITY3, b.readUnsignedShort() * 0.1));
+        register(108, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_HUMIDITY4, b.readUnsignedShort() * 0.1));
+
+        // BLE Fuel Level
+        register(270, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_FUEL_LEVEL1, b.readUnsignedShort()));
+        register(273, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_FUEL_LEVEL2, b.readUnsignedShort()));
+        register(276, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_FUEL_LEVEL3, b.readUnsignedShort()));
+        register(279, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_FUEL_LEVEL4, b.readUnsignedShort()));
+        register(281, fmbXXX, (p, b) -> p.set(Position.KEY_FAULT_CODES, b.readString(b.readUnsignedByte(), StandardCharsets.US_ASCII)));
+
+        // BLE Fuel Frequency
+        register(306, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_FUEL_FREQ1, b.readUnsignedInt()));
+        register(307, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_FUEL_FREQ2, b.readUnsignedInt()));
+        register(308, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_FUEL_FREQ3, b.readUnsignedInt()));
+        register(309, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_FUEL_FREQ4, b.readUnsignedInt()));
+
+        // BLE Luminosity
+        register(335, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_LUMINOSITY1, b.readUnsignedShort()));
+        register(336, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_LUMINOSITY2, b.readUnsignedShort()));
+        register(337, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_LUMINOSITY3, b.readUnsignedShort()));
+        register(338, fmbXXX, (p, b) -> p.set(Position.KEY_BLE_LUMINOSITY4, b.readUnsignedShort()));
+
+        // BLE Custom 1
+        register(331, fmbXXX, (p, b) -> p.set(Position.KEY_BLE1_CUSTOM1,  b.readString(b.readUnsignedByte(), StandardCharsets.US_ASCII)));
+        register(463, fmbXXX, (p, b) -> p.set(Position.KEY_BLE1_CUSTOM2, b.readUnsignedInt()));
+        register(464, fmbXXX, (p, b) -> p.set(Position.KEY_BLE1_CUSTOM3, b.readUnsignedInt()));
+        register(465, fmbXXX, (p, b) -> p.set(Position.KEY_BLE1_CUSTOM4, b.readUnsignedInt()));
+        register(466, fmbXXX, (p, b) -> p.set(Position.KEY_BLE1_CUSTOM5, b.readUnsignedInt()));
+
+        // BLE Custom 2
+        register(332, fmbXXX, (p, b) -> p.set(Position.KEY_BLE2_CUSTOM1,  b.readString(b.readUnsignedByte(), StandardCharsets.US_ASCII)));
+        register(467, fmbXXX, (p, b) -> p.set(Position.KEY_BLE2_CUSTOM2, b.readUnsignedInt()));
+        register(468, fmbXXX, (p, b) -> p.set(Position.KEY_BLE2_CUSTOM3, b.readUnsignedInt()));
+        register(469, fmbXXX, (p, b) -> p.set(Position.KEY_BLE2_CUSTOM4, b.readUnsignedInt()));
+        register(470, fmbXXX, (p, b) -> p.set(Position.KEY_BLE2_CUSTOM5, b.readUnsignedInt()));
+
+        // BLE Custom 3
+        register(333, fmbXXX, (p, b) -> p.set(Position.KEY_BLE3_CUSTOM1,  b.readString(b.readUnsignedByte(), StandardCharsets.US_ASCII)));
+        register(471, fmbXXX, (p, b) -> p.set(Position.KEY_BLE3_CUSTOM2, b.readUnsignedInt()));
+        register(472, fmbXXX, (p, b) -> p.set(Position.KEY_BLE3_CUSTOM3, b.readUnsignedInt()));
+        register(473, fmbXXX, (p, b) -> p.set(Position.KEY_BLE3_CUSTOM4, b.readUnsignedInt()));
+        register(474, fmbXXX, (p, b) -> p.set(Position.KEY_BLE3_CUSTOM5, b.readUnsignedInt()));
+        // BLE 4 Custom
+        register(334, fmbXXX, (p, b) -> p.set(Position.KEY_BLE4_CUSTOM1, ByteBufUtil.hexDump(b.readSlice(1))));
+        register(475, fmbXXX, (p, b) -> p.set(Position.KEY_BLE4_CUSTOM2, b.readUnsignedInt()));
+        register(476, fmbXXX, (p, b) -> p.set(Position.KEY_BLE4_CUSTOM3, b.readUnsignedInt()));
+        register(477, fmbXXX, (p, b) -> p.set(Position.KEY_BLE4_CUSTOM4, b.readUnsignedInt()));
+        register(478, fmbXXX, (p, b) -> p.set(Position.KEY_BLE4_CUSTOM5, b.readUnsignedInt()));
+        // CAN
+        register(90,  fmbXXX, (p, b) -> p.set(Position.KEY_DOOR_STATUS, b.readUnsignedShort()));
+        register(100, fmbXXX, (p, b) -> p.set(Position.KEY_PROGRAM_NUMBER, b.readUnsignedInt()));
+        register(101, fmbXXX, (p, b) -> p.set(Position.KEY_MODULE_ID_8B, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(388, fmbXXX, (p, b) -> p.set(Position.KEY_MODULE_ID_17B, ByteBufUtil.hexDump(b.readSlice(17))));
+        register(102, fmbXXX, (p, b) -> p.set(Position.KEY_ENGINE_WORKTIME, b.readUnsignedInt()));
+        register(103, fmbXXX, (p, b) -> p.set(Position.KEY_ENGINE_WORKTIME_COUNTED, b.readUnsignedInt()));
+        register(105, fmbXXX, (p, b) -> p.set(Position.KEY_TOTAL_MILEAGE_COUNTED, b.readUnsignedInt()));
+        register(107, fmbXXX, (p, b) -> p.set(Position.KEY_FUEL_CONSUMED_COUNTED, b.readUnsignedInt() * 0.1));
+        register(111, fmbXXX, (p, b) -> p.set(Position.KEY_ADBLUE_PERCENT, b.readUnsignedByte()));
+        register(112, fmbXXX, (p, b) -> p.set(Position.KEY_ADBLUE_LEVEL, b.readUnsignedShort() * 0.1));
+        register(114, fmbXXX, (p, b) -> p.set(Position.KEY_ENGINE_LOAD, b.readUnsignedByte()));
+        register(118, fmbXXX, (p, b) -> p.set(Position.KEY_AXLE1_LOAD, b.readUnsignedShort()));
+        register(119, fmbXXX, (p, b) -> p.set(Position.KEY_AXLE2_LOAD, b.readUnsignedShort()));
+        register(120, fmbXXX, (p, b) -> p.set(Position.KEY_AXLE3_LOAD, b.readUnsignedShort()));
+        register(121, fmbXXX, (p, b) -> p.set(Position.KEY_AXLE4_LOAD, b.readUnsignedShort()));
+        register(122, fmbXXX, (p, b) -> p.set(Position.KEY_AXLE5_LOAD, b.readUnsignedShort()));
+        register(123, fmbXXX, (p, b) -> p.set(Position.KEY_CONTROL_FLAGS, b.readUnsignedInt()));
+        register(124, fmbXXX, (p, b) -> p.set(Position.KEY_AGR_FLAGS, b.readLong())); // 8 bytes
+        register(125, fmbXXX, (p, b) -> p.set(Position.KEY_HARVEST_TIME, b.readUnsignedInt()));
+        register(126, fmbXXX, (p, b) -> p.set(Position.KEY_HARVEST_AREA, b.readUnsignedInt()));
+        register(127, fmbXXX, (p, b) -> p.set(Position.KEY_MOWING_EFFICIENCY, b.readUnsignedInt()));       // m2/h
+        register(128, fmbXXX, (p, b) -> p.set(Position.KEY_GRAIN_VOLUME, b.readUnsignedInt()));            // kg
+        register(129, fmbXXX, (p, b) -> p.set(Position.KEY_GRAIN_MOISTURE, b.readUnsignedShort()));        // %
+        register(130, fmbXXX, (p, b) -> p.set(Position.KEY_HARVEST_DRUM_RPM, b.readUnsignedShort()));      // rpm
+        register(131, fmbXXX, (p, b) -> p.set(Position.KEY_HARVEST_DRUM_GAP, b.readUnsignedByte()));       // mm
+        register(132, fmbXXX, (p, b) -> p.set(Position.KEY_SECURITY_FLAGS, b.readLong()));                 // 8 bytes
+        register(133, fmbXXX, (p, b) -> p.set(Position.KEY_TACHO_TOTAL_DISTANCE, b.readUnsignedInt()));    // m
+        register(134, fmbXXX, (p, b) -> p.set(Position.KEY_TRIP_DISTANCE, b.readUnsignedInt()));           // m
+        register(135, fmbXXX, (p, b) -> p.set(Position.KEY_TACHO_SPEED, b.readUnsignedShort()));           // km/h
+        register(136, fmbXXX, (p, b) -> p.set(Position.KEY_TACHO_CARD_PRESENT, b.readUnsignedByte()));
+        register(137, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER1_STATES, b.readUnsignedByte()));
+        register(138, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER2_STATES, b.readUnsignedByte()));
+        register(139, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER1_CONT_DRIVE, b.readUnsignedShort()));    // minutes
+        register(140, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER2_CONT_DRIVE, b.readUnsignedShort()));    // minutes
+        register(141, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER1_BREAK_TIME, b.readUnsignedShort()));    // minutes
+        register(142, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER2_BREAK_TIME, b.readUnsignedShort()));    // minutes
+        register(143, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER1_ACTIVITY, b.readUnsignedShort()));      // minutes
+        register(144, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER2_ACTIVITY, b.readUnsignedShort()));      // minutes
+        register(145, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER1_CUM_DRIVE, b.readUnsignedShort()));     // minutes
+        register(146, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER2_CUM_DRIVE, b.readUnsignedShort()));     // minutes
+        register(147, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER1_ID_HIGH, b.readLong()));                // 8 bytes
+        register(148, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER1_ID_LOW, b.readLong()));                 // 8 bytes
+        register(149, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER2_ID_HIGH, b.readLong()));                // 8 bytes
+        register(150, fmbXXX, (p, b) -> p.set(Position.KEY_DRIVER2_ID_LOW, b.readLong()));                 // 8 bytes
+        register(151, fmbXXX, (p, b) -> p.set(Position.KEY_BATTERY_TEMP, b.readShort() * 0.1));            // °C
+        register(152, fmbXXX, (p, b) -> p.set(Position.KEY_HV_BATTERY_LEVEL, b.readUnsignedByte()));       // %
+        register(160, fmbXXX, (p, b) -> p.set(Position.KEY_DTC_COUNT, b.readUnsignedByte()));
+        register(161, fmbXXX, (p, b) -> p.set(Position.KEY_ARM_SLOPE, b.readShort()));                     // °
+        register(162, fmbXXX, (p, b) -> p.set(Position.KEY_ARM_ROTATION, b.readShort()));                  // °
+        register(163, fmbXXX, (p, b) -> p.set(Position.KEY_ARM_EJECT, b.readUnsignedShort()));             // m
+        register(164, fmbXXX, (p, b) -> p.set(Position.KEY_ARM_DISTANCE, b.readUnsignedShort()));          // m
+        register(165, fmbXXX, (p, b) -> p.set(Position.KEY_ARM_HEIGHT, b.readUnsignedShort()));
+        register(166, fmbXXX, (p, b) -> p.set(Position.KEY_DRILL_RPM, b.readUnsignedShort()));
+        register(167, fmbXXX, (p, b) -> p.set(Position.KEY_SALT_SQ_METER, b.readUnsignedShort()));
+        register(168, fmbXXX, (p, b) -> p.set(Position.KEY_BATTERY_VOLTAGE, b.readUnsignedShort() * 0.001));
+        register(169, fmbXXX, (p, b) -> p.set(Position.KEY_FINE_SALT, b.readUnsignedInt()));
+        register(170, fmbXXX, (p, b) -> p.set(Position.KEY_COARSE_SALT, b.readUnsignedInt()));
+        register(171, fmbXXX, (p, b) -> p.set(Position.KEY_DIMIX, b.readUnsignedInt()));
+        register(172, fmbXXX, (p, b) -> p.set(Position.KEY_COARSE_CALCIUM, b.readUnsignedInt()));
+        register(173, fmbXXX, (p, b) -> p.set(Position.KEY_CALCIUM_CHLORIDE, b.readUnsignedInt()));
+        register(174, fmbXXX, (p, b) -> p.set(Position.KEY_SODIUM_CHLORIDE, b.readUnsignedInt()));
+        register(176, fmbXXX, (p, b) -> p.set(Position.KEY_MAGNESIUM_CHLORIDE, b.readUnsignedInt()));
+        register(177, fmbXXX, (p, b) -> p.set(Position.KEY_GRAVEL, b.readUnsignedInt()));
+        register(178, fmbXXX, (p, b) -> p.set(Position.KEY_SAND, b.readUnsignedInt()));
+        register(183, fmbXXX, (p, b) -> p.set(Position.KEY_WIDTH_LEFT, b.readUnsignedShort()));
+        register(184, fmbXXX, (p, b) -> p.set(Position.KEY_WIDTH_RIGHT, b.readUnsignedShort()));
+        register(185, fmbXXX, (p, b) -> p.set(Position.KEY_SALT_HOURS, b.readUnsignedInt()));
+        register(186, fmbXXX, (p, b) -> p.set(Position.KEY_SALT_DISTANCE, b.readUnsignedInt()));
+        register(187, fmbXXX, (p, b) -> p.set(Position.KEY_LOAD_WEIGHT, b.readUnsignedInt()));
+        register(188, fmbXXX, (p, b) -> p.set(Position.KEY_RETARDER_LOAD, b.readUnsignedByte()));
+        register(189, fmbXXX, (p, b) -> p.set(Position.KEY_CRUISE_TIME, b.readUnsignedInt()));
+
+        // 282
+        register(282, fmbXXX, (p, b) -> p.set(Position.KEY_DTC_CODES, b.readString(b.readUnsignedByte(), StandardCharsets.US_ASCII)));
+
+        // 304–305
+        register(304, fmbXXX, (p, b) -> p.set(Position.KEY_RANGE_BATTERY, b.readUnsignedInt()));
+        register(305, fmbXXX, (p, b) -> p.set(Position.KEY_RANGE_FUEL, b.readUnsignedInt()));
+
+        // 325
+        register(325, fmbXXX, (p, b) -> p.set(Position.KEY_VIN, b.readCharSequence(17, StandardCharsets.US_ASCII).toString()));
+
+        // 517–521
+        register(517, fmbXXX, (p, b) -> p.set(Position.KEY_SECURITY_FLAGS_P4, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(518, fmbXXX, (p, b) -> p.set(Position.KEY_CONTROL_FLAGS_P4, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(519, fmbXXX, (p, b) -> p.set(Position.KEY_INDICATOR_FLAGS_P4, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(520, fmbXXX, (p, b) -> p.set(Position.KEY_AGRICULTURE_FLAGS_P4, ByteBufUtil.hexDump(b.readSlice(8))));
+        register(521, fmbXXX, (p, b) -> p.set(Position.KEY_UTILITY_FLAGS_P4, ByteBufUtil.hexDump(b.readSlice(8))));
+        // Cistern / LNG / LPG
+        register(522, fmbXXX, (p, b) -> p.set(Position.KEY_CISTERN_STATE_FLAGS_P4, b.readLong()));
+        register(855, fmbXXX, (p, b) -> p.set(Position.KEY_LNG_USED, b.readUnsignedInt()));
+        register(856, fmbXXX, (p, b) -> p.set(Position.KEY_LNG_USED_COUNTED, b.readUnsignedInt()));
+        register(857, fmbXXX, (p, b) -> p.set(Position.KEY_LNG_LEVEL_PROC, b.readUnsignedShort()));
+        register(858, fmbXXX, (p, b) -> p.set(Position.KEY_LNG_LEVEL_KG, b.readUnsignedShort()));
+        register(1100, fmbXXX, (p, b) -> p.set(Position.KEY_LPG_USED, b.readUnsignedInt()));
+        register(1101, fmbXXX, (p, b) -> p.set(Position.KEY_LPG_USED_COUNTED, b.readUnsignedInt()));
+        register(1102, fmbXXX, (p, b) -> p.set(Position.KEY_LPG_LEVEL_PROC, b.readUnsignedShort()));
+        register(1103, fmbXXX, (p, b) -> p.set(Position.KEY_LPG_LEVEL_LITERS, b.readUnsignedShort()));
+
+        // SSF flags
+        register(898, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_IGNITION, b.readUnsignedByte() == 1));
+        register(652, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_KEY_IN_IGNITION, b.readUnsignedByte() == 1));
+        register(899, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_WEBASO, b.readUnsignedByte() == 1));
+        register(900, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_ENGINE_WORKING, b.readUnsignedByte() == 1));
+        register(901, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_STANDALONE_ENGINE, b.readUnsignedByte() == 1));
+        register(902, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_READY_TO_DRIVE, b.readUnsignedByte() == 1));
+        register(903, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_ENGINE_WORKING_CNG, b.readUnsignedByte() == 1));
+        register(904, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_WORK_MODE, b.readUnsignedByte()));
+        register(905, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_OPERATOR, b.readUnsignedByte() == 1));
+        register(906, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_INTERLOCK, b.readUnsignedByte() == 1));
+        register(907, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_ENGINE_LOCK_ACTIVE, b.readUnsignedByte() == 1));
+        register(908, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_REQUEST_LOCK_ENGINE, b.readUnsignedByte() == 1));
+        register(653, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_HANDBRAKE_ACTIVE, b.readUnsignedByte() == 1));
+        register(910, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_FOOTBRAKE_ACTIVE, b.readUnsignedByte() == 1));
+        register(911, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_CLUTCH_PUSHED, b.readUnsignedByte() == 1));
+        register(912, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_HAZARD_WARNING, b.readUnsignedByte() == 1));
+        register(654, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_FRONT_LEFT_DOOR, b.readUnsignedByte() == 1));
+        register(655, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_FRONT_RIGHT_DOOR, b.readUnsignedByte() == 1));
+        register(656, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_REAR_LEFT_DOOR, b.readUnsignedByte() == 1));
+        register(657, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_REAR_RIGHT_DOOR, b.readUnsignedByte() == 1));
+        register(658, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_TRUNK_DOOR, b.readUnsignedByte() == 1));
+        register(913, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_ENGINE_COVER, b.readUnsignedByte() == 1));
+        // SSF extended
+        register(909, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_ROOF_OPEN, b.readUnsignedByte() == 1));
+        register(914, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_CHARGING_WIRE, b.readUnsignedByte() == 1));
+        register(915, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_BATTERY_CHARGING, b.readUnsignedByte() == 1));
+        register(916, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_ELECTRIC_ENGINE, b.readUnsignedByte() == 1));
+        register(917, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_CAR_CLOSED_FACTORY, b.readUnsignedByte() == 1));
+        register(918, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_FACTORY_ALARM_ACTUATED, b.readUnsignedByte() == 1));
+        register(919, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_FACTORY_ALARM_EMULATED, b.readUnsignedByte() == 1));
+        register(920, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_SIGNAL_CLOSE_FACTORY, b.readUnsignedByte() == 1));
+        register(921, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_SIGNAL_OPEN_FACTORY, b.readUnsignedByte() == 1));
+        register(922, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_REARMING_SIGNAL, b.readUnsignedByte() == 1));
+        register(923, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_TRUNK_REMOTE, b.readUnsignedByte() == 1));
+        register(924, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_CAN_SLEEP, b.readUnsignedByte() == 1));
+        register(925, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_FACTORY_REMOTE_3X, b.readUnsignedByte() == 1));
+        register(926, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_FACTORY_ARMED, b.readUnsignedByte() == 1));
+        register(660, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_PARKING_GEAR, b.readUnsignedByte() == 1));
+        register(661, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_REVERSE_GEAR, b.readUnsignedByte() == 1));
+        register(659, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_NEUTRAL_GEAR, b.readUnsignedByte() == 1));
+        register(927, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_DRIVE_ACTIVE, b.readUnsignedByte() == 1));
+        register(1083, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_ENGINE_WORKING_DUALFUEL, b.readUnsignedByte() == 1));
+        register(1084, fmbXXX, (p, b) -> p.set(Position.KEY_SSF_ENGINE_WORKING_LPG, b.readUnsignedByte() == 1));
+
+        // CSF flags
+        register(928, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_PARKING_LIGHTS, b.readUnsignedByte() == 1));
+        register(929, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_DIPPED_HEADLIGHTS, b.readUnsignedByte() == 1));
+        register(930, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_FULL_BEAM_HEADLIGHTS, b.readUnsignedByte() == 1));
+        register(931, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_REAR_FOG_LIGHTS, b.readUnsignedByte() == 1));
+        register(932, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_FRONT_FOG_LIGHTS, b.readUnsignedByte() == 1));
+        register(933, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_ADDITIONAL_FRONT_LIGHTS, b.readUnsignedByte() == 1));
+        register(934, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_ADDITIONAL_REAR_LIGHTS, b.readUnsignedByte() == 1));
+        register(935, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_LIGHT_SIGNAL, b.readUnsignedByte() == 1));
+        register(936, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_AIR_CONDITIONING, b.readUnsignedByte() == 1));
+        register(937, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_CRUISE_CONTROL, b.readUnsignedByte() == 1));
+        register(938, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_AUTOMATIC_RETARDER, b.readUnsignedByte() == 1));
+        register(939, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_MANUAL_RETARDER, b.readUnsignedInt()));
+        register(940, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_DRIVER_SEATBELT, b.readUnsignedInt()));
+        register(941, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_FRONT_DRIVER_SEATBELT, b.readUnsignedInt()));
+        register(942, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_LEFT_DRIVER_SEATBELT, b.readUnsignedInt()));
+        register(943, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_RIGHT_DRIVER_SEATBELT, b.readUnsignedInt()));
+        register(944, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_CENTRE_DRIVER_SEATBELT, b.readUnsignedInt()));
+        register(945, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_FRONT_PASSENGER_PRESENT, b.readUnsignedInt()));
+        register(946, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_PTO, b.readUnsignedInt()));
+        register(947, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_FRONT_DIFF_LOCKED, b.readUnsignedInt()));
+        register(948, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_REAR_DIFF_LOCKED, b.readUnsignedInt()));
+        register(949, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_CENTRAL_DIFF_4HI_LOCKED, b.readUnsignedInt()));
+        register(950, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_REAR_DIFF_4LO_LOCKED, b.readUnsignedInt()));
+        register(951, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_TRAILER_AXLE1_LIFT, b.readUnsignedInt()));
+        register(952, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_TRAILER_AXLE2_LIFT, b.readUnsignedInt()));
+        register(1085, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_TRAILER_CONNECTED, b.readUnsignedInt()));
+        register(1086, fmbXXX, (p, b) -> p.set(Position.KEY_CSF_START_STOP_INACTIVE, b.readUnsignedInt()));
+
+        register(953, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_CHECK_ENGINE, b.readUnsignedInt()));
+        register(954, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_ABS, b.readUnsignedInt()));
+        register(955, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_ESP, b.readUnsignedInt()));
+        register(956, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_ESP_TURNED_OFF, b.readUnsignedInt()));
+        register(957, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_STOP, b.readUnsignedInt()));
+        register(958, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_OIL_LEVEL, b.readUnsignedInt()));
+        register(959, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_COOLANT_LEVEL, b.readUnsignedInt()));
+        register(960, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_BATTERY_NOT_CHARGING, b.readUnsignedInt()));
+        register(961, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_HANDBRAKE, b.readUnsignedInt()));
+        register(962, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_AIRBAG, b.readUnsignedInt()));
+        register(963, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_EPS, b.readUnsignedInt()));
+        register(964, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_WARNING, b.readUnsignedInt()));
+        register(965, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_LIGHTS_FAILURE, b.readUnsignedInt()));
+        register(966, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_LOW_TIRE_PRESSURE, b.readUnsignedInt()));
+        register(967, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_BRAKE_PADS_WEAR, b.readUnsignedInt()));
+        register(968, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_LOW_FUEL, b.readUnsignedInt()));
+        register(969, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_MAINTENANCE_REQUIRED, b.readUnsignedInt()));
+        register(970, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_GLOW_PLUG, b.readUnsignedInt()));
+        register(971, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_FAP, b.readUnsignedInt()));
+        register(972, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_EPC, b.readUnsignedInt()));
+        register(973, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_OIL_FILTER_CLOGGED, b.readUnsignedInt()));
+        register(974, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_LOW_ENGINE_OIL_PRESSURE, b.readUnsignedInt()));
+        register(975, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_ENGINE_OIL_HIGH_TEMP, b.readUnsignedInt()));
+        register(976, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_LOW_COOLANT, b.readUnsignedInt()));
+        register(977, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_HYDRAULIC_OIL_FILTER_CLOGGED, b.readUnsignedInt()));
+        register(978, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_HYDRAULIC_LOW_PRESSURE, b.readUnsignedInt()));
+        register(979, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_HYDRAULIC_OIL_LOW, b.readUnsignedInt()));
+        register(980, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_HYDRAULIC_HIGH_TEMP, b.readUnsignedInt()));
+        register(981, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_HYDRAULIC_OVERFLOW, b.readUnsignedInt()));
+        register(982, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_AIR_FILTER_CLOGGED, b.readUnsignedInt()));
+        register(983, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_FUEL_FILTER_CLOGGED, b.readUnsignedInt()));
+        register(984, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_WATER_IN_FUEL, b.readUnsignedInt()));
+        register(985, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_BRAKE_SYSTEM_FILTER_CLOGGED, b.readUnsignedInt()));
+        register(986, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_LOW_WASHER_FLUID, b.readUnsignedInt()));
+        register(987, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_LOW_ADBLUE, b.readUnsignedInt()));
+        register(988, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_LOW_TRAILER_TIRE_PRESSURE, b.readUnsignedInt()));
+        register(989, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_TRAILER_BRAKE_LINING_WEAR, b.readUnsignedInt()));
+        register(990, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_TRAILER_BRAKE_HIGH_TEMP, b.readUnsignedInt()));
+        register(991, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_TRAILER_PNEUMATIC_SUPPLY, b.readUnsignedInt()));
+        register(992, fmbXXX, (p, b) -> p.set(Position.KEY_ISF_LOW_CNG, b.readUnsignedInt()));
+
+        register(993, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_RIGHT_JOYSTICK_RIGHT, b.readUnsignedInt()));
+        register(994, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_RIGHT_JOYSTICK_LEFT, b.readUnsignedInt()));
+        register(995, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_RIGHT_JOYSTICK_FORWARD, b.readUnsignedInt()));
+        register(996, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_RIGHT_JOYSTICK_BACK, b.readUnsignedInt()));
+        register(997, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_LEFT_JOYSTICK_RIGHT, b.readUnsignedInt()));
+        register(998, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_LEFT_JOYSTICK_LEFT, b.readUnsignedInt()));
+        register(999, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_LEFT_JOYSTICK_FORWARD, b.readUnsignedInt()));
+        register(1000, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_LEFT_JOYSTICK_BACK, b.readUnsignedInt()));
+
+        register(1001, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_REAR_HYDRAULIC1, b.readUnsignedInt()));
+        register(1002, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_REAR_HYDRAULIC2, b.readUnsignedInt()));
+        register(1003, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_REAR_HYDRAULIC3, b.readUnsignedInt()));
+        register(1004, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_REAR_HYDRAULIC4, b.readUnsignedInt()));
+        register(1005, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_FRONT_HYDRAULIC1, b.readUnsignedInt()));
+        register(1006, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_FRONT_HYDRAULIC2, b.readUnsignedInt()));
+        register(1007, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_FRONT_HYDRAULIC3, b.readUnsignedInt()));
+        register(1008, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_FRONT_HYDRAULIC4, b.readUnsignedInt()));
+
+        register(1009, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_FRONT_HITCH, b.readUnsignedInt()));
+        register(1010, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_REAR_HITCH, b.readUnsignedInt()));
+        register(1011, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_FRONT_PTO, b.readUnsignedInt()));
+        register(1012, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_REAR_PTO, b.readUnsignedInt()));
+        register(1013, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_MOWING, b.readUnsignedInt()));
+        register(1014, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_THRESHING, b.readUnsignedInt()));
+        register(1015, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_GRAIN_RELEASE, b.readUnsignedInt()));
+        register(1016, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_GRAIN_TANK_FULL_100, b.readUnsignedInt()));
+        register(1017, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_GRAIN_TANK_FULL_70, b.readUnsignedInt()));
+        register(1018, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_GRAIN_TANK_OPENED, b.readUnsignedInt()));
+        register(1019, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_UNLOADER_DRIVE, b.readUnsignedInt()));
+        register(1020, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_CLEANING_FAN_CTRL_OFF, b.readUnsignedInt()));
+        register(1021, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_THRESHING_DRUM_CTRL_OFF, b.readUnsignedInt()));
+        register(1022, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_STRAW_WALKER_CLOGGED, b.readUnsignedInt()));
+        register(1023, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_THRESHING_DRUM_CLEARANCE, b.readUnsignedInt()));
+        register(1024, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_HYDRAULICS_TEMP_LOW, b.readUnsignedInt()));
+        register(1025, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_HYDRAULICS_TEMP_HIGH, b.readUnsignedInt()));
+        register(1026, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_EAR_AUGER_SPEED_LOW, b.readUnsignedInt()));
+        register(1027, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_GRAIN_AUGER_SPEED_LOW, b.readUnsignedInt()));
+        register(1028, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_STRAW_CHOPPER_SPEED_LOW, b.readUnsignedInt()));
+        register(1029, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_STRAW_SHAKER_SPEED_LOW, b.readUnsignedInt()));
+        register(1030, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_FEEDER_SPEED_LOW, b.readUnsignedInt()));
+        register(1031, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_STRAW_CHOPPER_ON, b.readUnsignedInt()));
+        register(1032, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_CORN_HEADER_CONNECTED, b.readUnsignedInt()));
+        register(1033, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_GRAIN_HEADER_CONNECTED, b.readUnsignedInt()));
+        register(1034, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_FEEDER_REVERSE_ON, b.readUnsignedInt()));
+        register(1035, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_HYDRAULIC_PUMP_FILTER_CLOGGED, b.readUnsignedInt()));
+        register(1087, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_ADAPTER_PRESSURE_FILTER, b.readUnsignedInt()));
+        register(1088, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_SERVICE2_REQUIRED, b.readUnsignedInt()));
+        register(1089, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_DRAIN_FILTER_CLOGGED, b.readUnsignedInt()));
+        // ASF Section Spraying
+        register(1090, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_SECTION1_SPRAYING, b.readUnsignedByte()));
+        register(1091, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_SECTION2_SPRAYING, b.readUnsignedByte()));
+        register(1092, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_SECTION3_SPRAYING, b.readUnsignedByte()));
+        register(1093, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_SECTION4_SPRAYING, b.readUnsignedByte()));
+        register(1094, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_SECTION5_SPRAYING, b.readUnsignedByte()));
+        register(1095, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_SECTION6_SPRAYING, b.readUnsignedByte()));
+        register(1096, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_SECTION7_SPRAYING, b.readUnsignedByte()));
+        register(1097, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_SECTION8_SPRAYING, b.readUnsignedByte()));
+        register(1098, fmbXXX, (p, b) -> p.set(Position.KEY_ASF_SECTION9_SPRAYING, b.readUnsignedByte()));
+
+        // USF Parameters
+        register(1036, fmbXXX, (p, b) -> p.set(Position.KEY_USF_SPREADING, b.readUnsignedByte()));
+        register(1037, fmbXXX, (p, b) -> p.set(Position.KEY_USF_POURING_CHEMICALS, b.readUnsignedByte()));
+        register(1038, fmbXXX, (p, b) -> p.set(Position.KEY_USF_CONVEYOR_BELT, b.readUnsignedByte()));
+        register(1039, fmbXXX, (p, b) -> p.set(Position.KEY_USF_SALT_SPREADER_DRIVE_WHEEL, b.readUnsignedByte()));
+        register(1040, fmbXXX, (p, b) -> p.set(Position.KEY_USF_BRUSHES, b.readUnsignedByte()));
+        register(1041, fmbXXX, (p, b) -> p.set(Position.KEY_USF_VACUUM_CLEANER, b.readUnsignedByte()));
+        register(1042, fmbXXX, (p, b) -> p.set(Position.KEY_USF_WATER_SUPPLY, b.readUnsignedByte()));
+        register(1043, fmbXXX, (p, b) -> p.set(Position.KEY_USF_SPREADING_ALT, b.readUnsignedByte()));
+        register(1044, fmbXXX, (p, b) -> p.set(Position.KEY_USF_LIQUID_PUMP, b.readUnsignedByte()));
+        register(1045, fmbXXX, (p, b) -> p.set(Position.KEY_USF_UNLOADING_HOPPER, b.readUnsignedByte()));
+        register(1046, fmbXXX, (p, b) -> p.set(Position.KEY_USF_LOW_SALT_LEVEL, b.readUnsignedByte()));
+        register(1047, fmbXXX, (p, b) -> p.set(Position.KEY_USF_LOW_WATER_LEVEL, b.readUnsignedByte()));
+        register(1048, fmbXXX, (p, b) -> p.set(Position.KEY_USF_CHEMICALS, b.readUnsignedByte()));
+        register(1049, fmbXXX, (p, b) -> p.set(Position.KEY_USF_COMPRESSOR, b.readUnsignedByte()));
+        // USF Extra
+        register(1050, fmbXXX, (p, b) -> p.set(Position.KEY_USF_WATER_VALVE_OPENED, b.readUnsignedByte()));
+        register(1051, fmbXXX, (p, b) -> p.set(Position.KEY_USF_CABIN_MOVED_UP, b.readUnsignedByte()));
+        register(1052, fmbXXX, (p, b) -> p.set(Position.KEY_USF_CABIN_MOVED_DOWN, b.readUnsignedByte()));
+        register(1099, fmbXXX, (p, b) -> p.set(Position.KEY_USF_HYDRAULICS_NOT_PERMITTED, b.readUnsignedByte()));
+
+        // CiSF Sections (1–8, each 3 params)
+        register(1053, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION1_PRESENCE, b.readUnsignedByte()));
+        register(1054, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION1_FILLED, b.readUnsignedByte()));
+        register(1055, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION1_OVERFILLED, b.readUnsignedByte()));
+        register(1056, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION2_PRESENCE, b.readUnsignedByte()));
+        register(1057, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION2_FILLED, b.readUnsignedByte()));
+        register(1058, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION2_OVERFILLED, b.readUnsignedByte()));
+        register(1059, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION3_PRESENCE, b.readUnsignedByte()));
+        register(1060, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION3_FILLED, b.readUnsignedByte()));
+        register(1061, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION3_OVERFILLED, b.readUnsignedByte()));
+        register(1062, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION4_PRESENCE, b.readUnsignedByte()));
+        register(1063, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION4_FILLED, b.readUnsignedByte()));
+        register(1064, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION4_OVERFILLED, b.readUnsignedByte()));
+        register(1065, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION5_PRESENCE, b.readUnsignedByte()));
+        register(1066, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION5_FILLED, b.readUnsignedByte()));
+        register(1067, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION5_OVERFILLED, b.readUnsignedByte()));
+        register(1068, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION6_PRESENCE, b.readUnsignedByte()));
+        register(1069, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION6_FILLED, b.readUnsignedByte()));
+        register(1070, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION6_OVERFILLED, b.readUnsignedByte()));
+        register(1071, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION7_PRESENCE, b.readUnsignedByte()));
+        register(1072, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION7_FILLED, b.readUnsignedByte()));
+        register(1073, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION7_OVERFILLED, b.readUnsignedByte()));
+        register(1074, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION8_PRESENCE, b.readUnsignedByte()));
+        register(1075, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION8_FILLED, b.readUnsignedByte()));
+        register(1076, fmbXXX, (p, b) -> p.set(Position.KEY_CISF_SECTION8_OVERFILLED, b.readUnsignedByte()));
+
+        // Service & Vehicle
+        register(400, fmbXXX, (p, b) -> p.set(Position.KEY_DISTANCE_TO_NEXT_SERVICE, b.readUnsignedInt()));
+        register(450, fmbXXX, (p, b) -> p.set(Position.KEY_CNG_LEVEL_KG, b.readUnsignedShort()));
+        register(859, fmbXXX, (p, b) -> p.set(Position.KEY_DISTANCE_FROM_NEED_SERVICE, b.readUnsignedInt()));
+        register(860, fmbXXX, (p, b) -> p.set(Position.KEY_DISTANCE_FROM_LAST_SERVICE, b.readUnsignedInt()));
+        register(861, fmbXXX, (p, b) -> p.set(Position.KEY_TIME_TO_NEXT_SERVICE, b.readUnsignedShort()));
+        register(862, fmbXXX, (p, b) -> p.set(Position.KEY_TIME_FROM_NEED_SERVICE, b.readUnsignedShort()));
+        register(863, fmbXXX, (p, b) -> p.set(Position.KEY_TIME_FROM_LAST_SERVICE, b.readUnsignedShort()));
+        register(864, fmbXXX, (p, b) -> p.set(Position.KEY_DISTANCE_TO_NEXT_OIL_SERVICE, b.readUnsignedInt()));
+        register(865, fmbXXX, (p, b) -> p.set(Position.KEY_TIME_TO_NEXT_OIL_SERVICE, b.readUnsignedShort()));
+        register(866, fmbXXX, (p, b) -> p.set(Position.KEY_LVCAN_VEHICLE_RANGE, b.readUnsignedInt()));
+        register(867, fmbXXX, (p, b) -> p.set(Position.KEY_LVCAN_TOTAL_CNG_COUNTED, b.readUnsignedInt()));
+
+        // Bale Count
+        register(1079, fmbXXX, (p, b) -> p.set(Position.KEY_TOTAL_BALE_COUNT, b.readUnsignedInt()));
+        register(1080, fmbXXX, (p, b) -> p.set(Position.KEY_BALE_COUNT, b.readUnsignedInt()));
+        register(1081, fmbXXX, (p, b) -> p.set(Position.KEY_CUT_BALE_COUNT, b.readUnsignedInt()));
+        register(1082, fmbXXX, (p, b) -> p.set(Position.KEY_BALE_SLICES, b.readUnsignedInt()));
+
+        // Road Speed
+        register(1116, fmbXXX, (p, b) -> p.set(Position.KEY_LVCAN_MAX_ROAD_SPEED, b.readUnsignedByte()));
+        register(1117, fmbXXX, (p, b) -> p.set(Position.KEY_LVCAN_EXCEEDED_ROAD_SPEED, b.readUnsignedByte()));
+
+        // Road Sign Features
+        register(1205, fmbXXX, (p, b) -> p.set(Position.KEY_RSF_SPEED_LIMIT_SIGN, b.readUnsignedByte()));
+        register(1206, fmbXXX, (p, b) -> p.set(Position.KEY_RSF_END_SPEED_LIMIT_SIGN, b.readUnsignedByte()));
+        register(1207, fmbXXX, (p, b) -> p.set(Position.KEY_RSF_SPEED_EXCEEDED, b.readUnsignedByte()));
+        register(1208, fmbXXX, (p, b) -> p.set(Position.KEY_RSF_TIME_SPEED_LIMIT_SIGN, b.readUnsignedByte()));
+        register(1209, fmbXXX, (p, b) -> p.set(Position.KEY_RSF_WEATHER_SPEED_LIMIT_SIGN, b.readUnsignedByte()));
     }
 
     private void decodeGh3000Parameter(Position position, int id, ByteBuf buf, int length) {
