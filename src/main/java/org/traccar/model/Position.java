@@ -782,6 +782,109 @@ public class Position extends Message {
     public static final String KEY_RSF_TIME_SPEED_LIMIT_SIGN = "rsfTimeSpeedLimitSign";
     public static final String KEY_RSF_WEATHER_SPEED_LIMIT_SIGN = "rsfWeatherSpeedLimitSign";
 
+    // FMB150
+    public static final String KEY_AUTHORIZED_IBUTTON = "authorizedIButton";
+    // CAN parameters
+    public static final String KEY_VEHICLE_SPEED = "vehicleSpeed";
+    public static final String KEY_ENGINE_COOLANT_TEMP = "engineCoolantTemp";
+    public static final String KEY_ENGINE_SPEED = "engineSpeed";
+    public static final String KEY_THROTTLE_POSITION = "throttlePosition";
+    public static final String KEY_FUEL_LEVEL_PERCENT = "fuelLevelPercent";
+    public static final String KEY_FUEL_LEVEL_LITERS = "fuelLevelLiters";
+    public static final String KEY_DISTANCE_TO_SERVICE = "distanceToService";
+    public static final String KEY_REMAINING_DISTANCE = "remainingDistance";
+    public static final String KEY_SEAT_BELT_FL = "seatBeltFrontLeft";
+    public static final String KEY_SEAT_BELT_FR = "seatBeltFrontRight";
+    public static final String KEY_SEAT_BELT_RL = "seatBeltRearLeft";
+    public static final String KEY_SEAT_BELT_RR = "seatBeltRearRight";
+    public static final String KEY_DOOR_FL = "doorFrontLeft";
+    public static final String KEY_DOOR_FR = "doorFrontRight";
+    public static final String KEY_DOOR_RL = "doorRearLeft";
+    public static final String KEY_DOOR_RR = "doorRearRight";
+    public static final String KEY_BONNET = "bonnet";
+    public static final String KEY_TRUNK = "trunk";
+    public static final String KEY_CRUISE_CONTROL = "cruiseControl";
+    public static final String KEY_BRAKE_SWITCH = "brakeSwitch";
+    public static final String KEY_LAMP_SIDE = "lampSide";
+    public static final String KEY_LAMP_DIMMED = "lampDimmed";
+    public static final String KEY_LAMP_REFLECTOR = "lampReflector";
+    public static final String KEY_LAMP_FOG_FRONT = "lampFogFront";
+    public static final String KEY_LAMP_FOG_REAR = "lampFogRear";
+    public static final String KEY_PARKING_BRAKE = "parkingBrake";
+    public static final String KEY_CLUTCH_SWITCH = "clutchSwitch";
+    public static final String KEY_CENTRAL_LOCK = "centralLock";
+    public static final String KEY_SEAT_BELT_RC = "seatBeltRearCenter";
+    public static final String KEY_EV_HV_VOLTAGE = "evHvBatteryVoltage";
+    public static final String KEY_EV_HV_CURRENT = "evHvBatteryCurrent";
+    public static final String KEY_EV_HV_POWER = "evHvBatteryPower";
+    public static final String KEY_HV_ENERGY_RECUP = "hvEnergyRecuperated";
+    public static final String KEY_HV_ENERGY_CONSUMED = "hvEnergyConsumed";
+    public static final String KEY_TURN_LEFT = "turnSignalLeft";
+    public static final String KEY_TURN_RIGHT = "turnSignalRight";
+    public static final String KEY_MOTOR_TEMP = "electricMotorTemp";
+    public static final String KEY_CHARGE_FLAP = "chargePortFlap";
+    public static final String KEY_CHARGE_PLUG = "chargePlugged";
+    public static final String KEY_HV_CHARGING_STATE = "hvChargingState";
+    public static final String KEY_TRANS_LEVER_P = "transLeverP";
+    public static final String KEY_TRANS_LEVER_R = "transLeverR";
+    public static final String KEY_TRANS_LEVER_N = "transLeverN";
+    public static final String KEY_TRANS_LEVER_D = "transLeverD";
+    public static final String KEY_ENGINE_OIL_PRESSURE = "engineOilPressure";
+    public static final String KEY_ENGINE_OIL_LEVEL = "engineOilLevel";
+    public static final String KEY_STEERING_ANGLE = "steeringAngle";
+    public static final String KEY_STEERING_LEFT = "steeringLeft";
+    public static final String KEY_STEERING_RIGHT = "steeringRight";
+    public static final String KEY_ECO_SWITCH = "ecoSwitch";
+    public static final String KEY_ALL_DOORS = "allDoors";
+    public static final String KEY_TRANS_SELECTED_GEAR = "transSelectedGear";
+    public static final String KEY_TRANS_CURRENT_GEAR = "transCurrentGear";
+    public static final String KEY_STEERING_TURN_COUNT = "steeringTurnCount";
+    public static final String KEY_RAMP_STATUS = "rampStatus";
+    public static final String KEY_BELLOW_PRESSURE_FR = "bellowPressureFr";
+    public static final String KEY_BELLOW_PRESSURE_FL = "bellowPressureFl";
+    public static final String KEY_BELLOW_PRESSURE_RR = "bellowPressureRr";
+    public static final String KEY_BELLOW_PRESSURE_RL = "bellowPressureRl";
+    public static final String KEY_GROSS_COMB_WEIGHT = "grossCombWeight";
+    public static final String KEY_GASEOUS_FUEL_RATE = "gaseousFuelRate";
+    public static final String KEY_ALTERNATOR_1 = "alternator1";
+    public static final String KEY_ALTERNATOR_2 = "alternator2";
+    public static final String KEY_ALTERNATOR_3 = "alternator3";
+    public static final String KEY_ALTERNATOR_4 = "alternator4";
+    public static final String KEY_ENGINE_TOTAL_HOURS = "engineTotalHours";
+    public static final String KEY_ENGINE_TOTAL_HOURS_COUNTED = "engineTotalHoursCounted";
+    public static final String KEY_AXLE6_LOAD = "axle6Load";
+    public static final String KEY_ENGINE_FUEL_TEMP = "engineFuelTemp";
+    public static final String KEY_CRUISE_SET_SPEED = "cruiseSetSpeed";
+    public static final String KEY_FUEL_ECONOMY = "fuelEconomy";
+    public static final String KEY_AIR_INTAKE_PRESSURE = "airIntakePressure";
+    public static final String KEY_DOOR1_LOCK = "door1Lock";
+    public static final String KEY_DOOR2_LOCK = "door2Lock";
+    public static final String KEY_DOOR3_LOCK = "door3Lock";
+    public static final String KEY_DOOR4_LOCK = "door4Lock";
+    public static final String KEY_AC_ON = "acOn";
+    public static final String KEY_ESP = "espEnabled";
+    public static final String KEY_ENGINE_TORQUE = "engineTorque";
+    public static final String KEY_AMBIENT_TEMP = "ambientTemp";
+    public static final String KEY_ASR = "asrEnabled";
+    public static final String KEY_WIPER = "wiper";
+    public static final String KEY_PTO = "ptoState";
+    public static final String KEY_MAX_ROAD_SPEED = "maxRoadSpeed";
+    public static final String KEY_EXCEEDED_ROAD_SPEED = "exceededRoadSpeed";
+    public static final String KEY_SPEED_SIGN_RECOGNIZED = "speedSignRecognized";
+    public static final String KEY_SPEED_SIGN_EXCEEDED = "speedSignExceeded";
+    // Escort LLS
+    public static final String KEY_ESCORT_TEMP1 = "escortTemp1";
+    public static final String KEY_ESCORT_TEMP2 = "escortTemp2";
+    public static final String KEY_ESCORT_TEMP3 = "escortTemp3";
+    public static final String KEY_ESCORT_TEMP4 = "escortTemp4";
+    // Escort LLS Sensors
+    public static final String KEY_ESCORT_BATTERY1 = "escortBattery1";
+    public static final String KEY_ESCORT_BATTERY2 = "escortBattery2";
+    public static final String KEY_ESCORT_BATTERY3 = "escortBattery3";
+    public static final String KEY_ESCORT_BATTERY4 = "escortBattery4";
+
+
+
     public Position() {
     }
 
